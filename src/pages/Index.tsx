@@ -4,6 +4,8 @@ import { GameState, INITIAL_GAME_STATE } from "../game/types";
 import { moveSnake } from "../game/gameLogic";
 import { INITIAL_DIRECTION, INITIAL_SNAKE } from "../game/constants";
 import GameCanvas from "../components/GameCanvas";
+import { Button } from "../components/ui/button";
+import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from "lucide-react";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -73,9 +75,6 @@ const Index = () => {
 
         onPlayerJoin((player) => {
           console.log("Player joined:", player.getProfile().name);
-          
-          // Send input through RPC
-          player.getProfile().name && RPC.call("handleInput", player.getProfile().name, RPC.Mode.ALL);
         });
 
       } catch (error) {
@@ -85,6 +84,10 @@ const Index = () => {
 
     initGame();
   }, []);
+
+  const handleControlPress = async (direction: string) => {
+    await RPC.call("handleInput", direction, RPC.Mode.ALL);
+  };
 
   if (isLoading) {
     return (
@@ -104,10 +107,53 @@ const Index = () => {
           </div>
         </>
       ) : (
-        <div className="text-white text-xl text-center p-4">
+        <div className="text-white flex flex-col items-center gap-8">
           <h1 className="text-2xl font-bold mb-4">Snake Game Controller</h1>
-          <p>Use your phone to control the snake!</p>
-          <p className="mt-2">Swipe or tap the arrows to move.</p>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="col-start-2">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={() => handleControlPress('up')}
+                className="w-16 h-16 rounded-full"
+              >
+                <ArrowUp className="h-8 w-8" />
+              </Button>
+            </div>
+            <div className="col-start-1">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={() => handleControlPress('left')}
+                className="w-16 h-16 rounded-full"
+              >
+                <ArrowLeft className="h-8 w-8" />
+              </Button>
+            </div>
+            <div className="col-start-3">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={() => handleControlPress('right')}
+                className="w-16 h-16 rounded-full"
+              >
+                <ArrowRight className="h-8 w-8" />
+              </Button>
+            </div>
+            <div className="col-start-2">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                onClick={() => handleControlPress('down')}
+                className="w-16 h-16 rounded-full"
+              >
+                <ArrowDown className="h-8 w-8" />
+              </Button>
+            </div>
+          </div>
+          <p className="mt-4 text-center">
+            Tap the arrows to control the snake!
+          </p>
         </div>
       )}
     </div>
