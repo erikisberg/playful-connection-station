@@ -130,7 +130,6 @@ const Index = () => {
   useEffect(() => {
     const initGame = async () => {
       try {
-        // Initialize PlayroomKit with stream mode
         await insertCoin({ 
           streamMode: true,
           maxPlayersPerRoom: 1
@@ -143,14 +142,12 @@ const Index = () => {
         
         setIsLoading(false);
 
-        // Handle when a player joins
         onPlayerJoin(async (player) => {
           console.log("Player joined:", player.getProfile().name);
           
-          // Handle player controls
-          player.onInput(input => {
+          // Updated to use onCustomInput instead of onInput
+          player.onCustomInput((input) => {
             if (gameState.gameOver) {
-              // Reset game on any input if game is over
               setGameState({
                 snake: INITIAL_SNAKE,
                 food: { x: 15, y: 15 },
@@ -222,5 +219,3 @@ const Index = () => {
     </div>
   );
 };
-
-export default Index;
