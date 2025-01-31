@@ -17,12 +17,13 @@ const Index = () => {
   const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
   const [highScore, setHighScore] = useState(0);
   const [showLobby, setShowLobby] = useState(true);
+  const [gameInitialized, setGameInitialized] = useState(false);
 
   // Game loop
   useEffect(() => {
     let gameLoop: number;
     
-    if (!isLoading && isStreamScreen()) {
+    if (!isLoading && isStreamScreen() && gameInitialized) {
       gameLoop = window.setInterval(() => {
         setGameState(prevState => {
           const newState = moveSnake(prevState);
@@ -37,7 +38,7 @@ const Index = () => {
     return () => {
       if (gameLoop) clearInterval(gameLoop);
     };
-  }, [isLoading, highScore]);
+  }, [isLoading, highScore, gameInitialized]);
 
   useEffect(() => {
     const initGame = async () => {
@@ -48,6 +49,7 @@ const Index = () => {
           skipLobby: true
         });
         
+        setGameInitialized(true);
         setIsLoading(false);
 
         RPC.register("handleInput", async (input: string) => {
@@ -92,6 +94,7 @@ const Index = () => {
 
       } catch (error) {
         console.error("Error initializing game:", error);
+        setIsLoading(false); // Set loading to false even if there's an error
       }
     };
 
@@ -107,10 +110,10 @@ const Index = () => {
     setShowLobby(false);
   };
 
-  if (isLoading) {
+  if (isLoading && !gameInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-2xl font-bold">Loading game...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-2xl font-bold text-white">Loading game...</div>
       </div>
     );
   }
