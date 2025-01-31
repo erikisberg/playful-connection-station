@@ -17,10 +17,11 @@ const Index = () => {
   const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
   const [highScore, setHighScore] = useState(0);
   const [showLobby, setShowLobby] = useState(true);
+  const [gameInitialized, setGameInitialized] = useState(false);
 
   // Game loop
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && gameInitialized && !showLobby) {
       const gameLoop = window.setInterval(() => {
         setGameState(prevState => {
           if (prevState.gameOver) return prevState;
@@ -34,12 +35,14 @@ const Index = () => {
 
       return () => clearInterval(gameLoop);
     }
-  }, [isLoading, highScore]);
+  }, [isLoading, gameInitialized, showLobby, highScore]);
 
   useEffect(() => {
     const initGame = async () => {
       try {
+        console.log("Starting game initialization");
         await insertCoin();
+        setGameInitialized(true);
         setIsLoading(false);
       } catch (error) {
         console.error("Failed to initialize game:", error);
@@ -97,23 +100,28 @@ const Index = () => {
     );
   }
 
-  if (showLobby && !isStreamScreen()) {
-    return <GameLobby highScore={highScore} onJoinGame={handleJoinGame} />;
+  // Main screen shows QR code and game canvas
+  if (isStreamScreen()) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900">
+        {showLobby ? (
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-white mb-8">Snake Game</h1>
+            <p className="text-xl text-white mb-4">High Score: {highScore}</p>
+            <p className="text-white mb-8">Scan the QR code with your phone to join!</p>
+          </div>
+        ) : (
+          <GameCanvas gameState={gameState} isLoading={isLoading} />
+        )}
+      </div>
+    );
   }
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900">
-      {isStreamScreen() ? (
-        <>
-          <GameCanvas gameState={gameState} isLoading={isLoading} />
-          <div className="mt-4 text-white text-xl">
-            Use your phone to control the game!
-          </div>
-        </>
-      ) : (
-        <GameControls onControlPress={handleControlPress} />
-      )}
-    </div>
+  // Mobile screen shows lobby or controls
+  return showLobby ? (
+    <GameLobby highScore={highScore} onJoinGame={handleJoinGame} />
+  ) : (
+    <GameControls onControlPress={handleControlPress} />
   );
 };
 
