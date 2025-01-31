@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { insertCoin, isStreamScreen, onPlayerJoin } from "playroomkit";
+import { insertCoin, isStreamScreen, onPlayerJoin, RPC } from "playroomkit";
 import { GameState, INITIAL_GAME_STATE } from "../game/types";
 import { moveSnake } from "../game/gameLogic";
 import { INITIAL_DIRECTION, INITIAL_SNAKE } from "../game/constants";
@@ -34,42 +34,46 @@ const Index = () => {
         
         setIsLoading(false);
 
-        onPlayerJoin(async (player) => {
+        // Register RPC for handling player input
+        RPC.register("handleInput", (input: string) => {
+          if (gameState.gameOver) {
+            setGameState({
+              snake: INITIAL_SNAKE,
+              food: { x: 15, y: 15 },
+              direction: INITIAL_DIRECTION,
+              score: 0,
+              gameOver: false
+            });
+            return;
+          }
+
+          setGameState(prevState => {
+            const newDirection = { ...prevState.direction };
+            
+            switch (input) {
+              case 'up':
+                if (prevState.direction.y !== 1) newDirection.y = -1, newDirection.x = 0;
+                break;
+              case 'down':
+                if (prevState.direction.y !== -1) newDirection.y = 1, newDirection.x = 0;
+                break;
+              case 'left':
+                if (prevState.direction.x !== 1) newDirection.x = -1, newDirection.y = 0;
+                break;
+              case 'right':
+                if (prevState.direction.x !== -1) newDirection.x = 1, newDirection.y = 0;
+                break;
+            }
+            
+            return { ...prevState, direction: newDirection };
+          });
+        });
+
+        onPlayerJoin((player) => {
           console.log("Player joined:", player.getProfile().name);
           
-          player.onInput((input) => {
-            if (gameState.gameOver) {
-              setGameState({
-                snake: INITIAL_SNAKE,
-                food: { x: 15, y: 15 },
-                direction: INITIAL_DIRECTION,
-                score: 0,
-                gameOver: false
-              });
-              return;
-            }
-
-            setGameState(prevState => {
-              const newDirection = { ...prevState.direction };
-              
-              switch (input) {
-                case 'up':
-                  if (prevState.direction.y !== 1) newDirection.y = -1, newDirection.x = 0;
-                  break;
-                case 'down':
-                  if (prevState.direction.y !== -1) newDirection.y = 1, newDirection.x = 0;
-                  break;
-                case 'left':
-                  if (prevState.direction.x !== 1) newDirection.x = -1, newDirection.y = 0;
-                  break;
-                case 'right':
-                  if (prevState.direction.x !== -1) newDirection.x = 1, newDirection.y = 0;
-                  break;
-              }
-              
-              return { ...prevState, direction: newDirection };
-            });
-          });
+          // Send input through RPC
+          player.getProfile().name && RPC.call("handleInput", player.getProfile().name, RPC.Mode.ALL);
         });
 
       } catch (error) {
