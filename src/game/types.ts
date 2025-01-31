@@ -1,3 +1,5 @@
+import { INITIAL_SNAKE, INITIAL_DIRECTION } from './constants';
+
 export interface Position {
   x: number;
   y: number;
