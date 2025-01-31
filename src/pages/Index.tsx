@@ -29,7 +29,7 @@ const Index = () => {
       try {
         await insertCoin({ 
           streamMode: true,
-          maxPlayersPerRoom: 1
+          maxPlayersPerRoom: 4  // Increased from 1 to 4 players
         });
         
         setIsLoading(false);
