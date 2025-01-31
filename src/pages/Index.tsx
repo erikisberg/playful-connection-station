@@ -35,7 +35,7 @@ const Index = () => {
         setIsLoading(false);
 
         // Register RPC for handling player input
-        RPC.register("handleInput", (input: string) => {
+        RPC.register("handleInput", async (input: string) => {
           if (gameState.gameOver) {
             setGameState({
               snake: INITIAL_SNAKE,
@@ -44,7 +44,7 @@ const Index = () => {
               score: 0,
               gameOver: false
             });
-            return;
+            return Promise.resolve("Game Reset");
           }
 
           setGameState(prevState => {
@@ -67,6 +67,8 @@ const Index = () => {
             
             return { ...prevState, direction: newDirection };
           });
+
+          return Promise.resolve("Direction Updated");
         });
 
         onPlayerJoin((player) => {
