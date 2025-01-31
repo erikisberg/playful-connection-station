@@ -1,126 +1,116 @@
 import { useEffect, useState } from "react";
-import { insertCoin, isStreamScreen } from "playroomkit";
+import { insertCoin, isStreamScreen, onPlayerJoin, RPC } from "playroomkit";
 import { GameState, INITIAL_GAME_STATE } from "../game/types";
 import { moveSnake } from "../game/gameLogic";
 import { INITIAL_DIRECTION, INITIAL_SNAKE } from "../game/constants";
 import GameCanvas from "../components/GameCanvas";
-import GameControls from "../components/GameControls";
-import GameLobby from "../components/GameLobby";
-
-interface PlayerForm {
-  name: string;
-  email: string;
-}
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
-  const [highScore, setHighScore] = useState(0);
-  const [showLobby, setShowLobby] = useState(true);
 
   // Game loop
   useEffect(() => {
-    if (!isLoading && !showLobby) {
-      const gameLoop = window.setInterval(() => {
-        setGameState(prevState => {
-          if (prevState.gameOver) return prevState;
-          const newState = moveSnake(prevState);
-          if (newState.score > highScore) {
-            setHighScore(newState.score);
-          }
-          return newState;
-        });
-      }, 150);
-
-      return () => clearInterval(gameLoop);
+    let gameLoop: number;
+    
+    if (!isLoading && isStreamScreen()) {
+      gameLoop = window.setInterval(() => {
+        setGameState(prevState => moveSnake(prevState));
+      }, 150); // Game speed
     }
-  }, [isLoading, showLobby, highScore]);
+
+    return () => {
+      if (gameLoop) clearInterval(gameLoop);
+    };
+  }, [isLoading]);
 
   useEffect(() => {
-    let mounted = true;
-
     const initGame = async () => {
       try {
-        await insertCoin();
-        if (mounted) {
-          setIsLoading(false);
-        }
+        await insertCoin({ 
+          streamMode: true,
+          maxPlayersPerRoom: 4  // Increased from 1 to 4 players
+        });
+        
+        setIsLoading(false);
+
+        // Register RPC for handling player input
+        RPC.register("handleInput", async (input: string) => {
+          if (gameState.gameOver) {
+            setGameState({
+              snake: INITIAL_SNAKE,
+              food: { x: 15, y: 15 },
+              direction: INITIAL_DIRECTION,
+              score: 0,
+              gameOver: false
+            });
+            return Promise.resolve("Game Reset");
+          }
+
+          setGameState(prevState => {
+            const newDirection = { ...prevState.direction };
+            
+            switch (input) {
+              case 'up':
+                if (prevState.direction.y !== 1) newDirection.y = -1, newDirection.x = 0;
+                break;
+              case 'down':
+                if (prevState.direction.y !== -1) newDirection.y = 1, newDirection.x = 0;
+                break;
+              case 'left':
+                if (prevState.direction.x !== 1) newDirection.x = -1, newDirection.y = 0;
+                break;
+              case 'right':
+                if (prevState.direction.x !== -1) newDirection.x = 1, newDirection.y = 0;
+                break;
+            }
+            
+            return { ...prevState, direction: newDirection };
+          });
+
+          return Promise.resolve("Direction Updated");
+        });
+
+        onPlayerJoin((player) => {
+          console.log("Player joined:", player.getProfile().name);
+          
+          // Send input through RPC
+          player.getProfile().name && RPC.call("handleInput", player.getProfile().name, RPC.Mode.ALL);
+        });
+
       } catch (error) {
-        console.error("Failed to initialize game:", error);
-        if (mounted) {
-          setIsLoading(false);
-        }
+        console.error("Error initializing game:", error);
       }
     };
 
     initGame();
-
-    return () => {
-      mounted = false;
-    };
   }, []);
 
-  const handleControlPress = (direction: string) => {
-    if (gameState.gameOver) {
-      setGameState({
-        snake: INITIAL_SNAKE,
-        food: { x: 15, y: 15 },
-        direction: INITIAL_DIRECTION,
-        score: 0,
-        gameOver: false
-      });
-      return;
-    }
-
-    setGameState(prevState => {
-      const newDirection = { ...prevState.direction };
-      
-      switch (direction) {
-        case 'up':
-          if (prevState.direction.y !== 1) newDirection.y = -1, newDirection.x = 0;
-          break;
-        case 'down':
-          if (prevState.direction.y !== -1) newDirection.y = 1, newDirection.x = 0;
-          break;
-        case 'left':
-          if (prevState.direction.x !== 1) newDirection.x = -1, newDirection.y = 0;
-          break;
-        case 'right':
-          if (prevState.direction.x !== -1) newDirection.x = 1, newDirection.y = 0;
-          break;
-      }
-      
-      return { ...prevState, direction: newDirection };
-    });
-  };
-
-  const handleJoinGame = (data: PlayerForm) => {
-    console.log("Player data:", data);
-    setShowLobby(false);
-  };
-
-  // Main screen shows QR code and game canvas
-  if (isStreamScreen()) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900">
-        {showLobby ? (
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-white mb-8">Snake Game</h1>
-            <p className="text-xl text-white mb-4">High Score: {highScore}</p>
-            <p className="text-white mb-8">Scan the QR code with your phone to join!</p>
-          </div>
-        ) : (
-          <GameCanvas gameState={gameState} isLoading={isLoading} />
-        )}
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-2xl font-bold">Loading game...</div>
       </div>
     );
   }
 
-  // Mobile screen shows lobby or controls
-  return showLobby ? (
-    <GameLobby highScore={highScore} onJoinGame={handleJoinGame} />
-  ) : (
-    <GameControls onControlPress={handleControlPress} />
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900">
+      {isStreamScreen() ? (
+        <>
+          <GameCanvas gameState={gameState} isLoading={isLoading} />
+          <div className="mt-4 text-white text-xl">
+            Use your phone to control the game!
+          </div>
+        </>
+      ) : (
+        <div className="text-white text-xl text-center p-4">
+          <h1 className="text-2xl font-bold mb-4">Snake Game Controller</h1>
+          <p>Use your phone to control the snake!</p>
+          <p className="mt-2">Swipe or tap the arrows to move.</p>
+        </div>
+      )}
+    </div>
   );
 };
 
