@@ -37,7 +37,7 @@ const Index = () => {
         onPlayerJoin(async (player) => {
           console.log("Player joined:", player.getProfile().name);
           
-          player.onKeyboardInput((input) => {
+          player.onInput((input) => {
             if (gameState.gameOver) {
               setGameState({
                 snake: INITIAL_SNAKE,
