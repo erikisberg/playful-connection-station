@@ -145,8 +145,7 @@ const Index = () => {
         onPlayerJoin(async (player) => {
           console.log("Player joined:", player.getProfile().name);
           
-          // Updated to use onCustomInput instead of onInput
-          player.onCustomInput((input) => {
+          player.onInput((input) => {
             if (gameState.gameOver) {
               setGameState({
                 snake: INITIAL_SNAKE,
@@ -219,3 +218,5 @@ const Index = () => {
     </div>
   );
 };
+
+export default Index;
