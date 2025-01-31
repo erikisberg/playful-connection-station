@@ -23,7 +23,7 @@ const Index = () => {
   useEffect(() => {
     let gameLoop: number;
     
-    if (!isLoading && isStreamScreen() && gameInitialized) {
+    if (!isLoading && gameInitialized) {
       gameLoop = window.setInterval(() => {
         setGameState(prevState => {
           const newState = moveSnake(prevState);
@@ -49,6 +49,7 @@ const Index = () => {
           skipLobby: true
         });
         
+        console.log("Game initialized successfully");
         setGameInitialized(true);
         setIsLoading(false);
 
@@ -94,7 +95,7 @@ const Index = () => {
 
       } catch (error) {
         console.error("Error initializing game:", error);
-        setIsLoading(false); // Set loading to false even if there's an error
+        setIsLoading(false);
       }
     };
 
