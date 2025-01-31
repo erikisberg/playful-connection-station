@@ -17,11 +17,10 @@ const Index = () => {
   const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
   const [highScore, setHighScore] = useState(0);
   const [showLobby, setShowLobby] = useState(true);
-  const [gameInitialized, setGameInitialized] = useState(false);
 
   // Game loop
   useEffect(() => {
-    if (!isLoading && gameInitialized && !showLobby) {
+    if (!isLoading && !showLobby) {
       const gameLoop = window.setInterval(() => {
         setGameState(prevState => {
           if (prevState.gameOver) return prevState;
@@ -35,22 +34,30 @@ const Index = () => {
 
       return () => clearInterval(gameLoop);
     }
-  }, [isLoading, gameInitialized, showLobby, highScore]);
+  }, [isLoading, showLobby, highScore]);
 
   useEffect(() => {
+    let mounted = true;
+
     const initGame = async () => {
       try {
-        console.log("Starting game initialization");
         await insertCoin();
-        setGameInitialized(true);
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error("Failed to initialize game:", error);
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     initGame();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleControlPress = (direction: string) => {
@@ -91,14 +98,6 @@ const Index = () => {
     console.log("Player data:", data);
     setShowLobby(false);
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-2xl font-bold text-white">Loading game...</div>
-      </div>
-    );
-  }
 
   // Main screen shows QR code and game canvas
   if (isStreamScreen()) {
