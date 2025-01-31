@@ -23,7 +23,8 @@ const Index = () => {
   useEffect(() => {
     let gameLoop: number;
     
-    if (!isLoading && gameInitialized) {
+    if (gameInitialized && !isLoading) {
+      console.log("Starting game loop");
       gameLoop = window.setInterval(() => {
         setGameState(prevState => {
           const newState = moveSnake(prevState);
@@ -36,23 +37,25 @@ const Index = () => {
     }
 
     return () => {
-      if (gameLoop) clearInterval(gameLoop);
+      if (gameLoop) {
+        console.log("Clearing game loop");
+        clearInterval(gameLoop);
+      }
     };
   }, [isLoading, highScore, gameInitialized]);
 
   useEffect(() => {
     const initGame = async () => {
+      console.log("Starting game initialization");
       try {
-        await insertCoin({ 
+        const result = await insertCoin({ 
           streamMode: true,
           maxPlayersPerRoom: 1,
           skipLobby: true
         });
         
-        console.log("Game initialized successfully");
-        setGameInitialized(true);
-        setIsLoading(false);
-
+        console.log("PlayroomKit initialization result:", result);
+        
         RPC.register("handleInput", async (input: string) => {
           if (gameState.gameOver) {
             setGameState({
@@ -93,9 +96,14 @@ const Index = () => {
           console.log("Player joined:", player.getProfile().name);
         });
 
+        setGameInitialized(true);
+        setIsLoading(false);
+        console.log("Game initialization complete");
+
       } catch (error) {
         console.error("Error initializing game:", error);
         setIsLoading(false);
+        setGameInitialized(false);
       }
     };
 
@@ -111,7 +119,8 @@ const Index = () => {
     setShowLobby(false);
   };
 
-  if (isLoading && !gameInitialized) {
+  // Show loading screen only during initial load
+  if (!gameInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
         <div className="text-2xl font-bold text-white">Loading game...</div>
@@ -119,6 +128,7 @@ const Index = () => {
     );
   }
 
+  // Show lobby for non-stream screens
   if (showLobby && !isStreamScreen()) {
     return <GameLobby highScore={highScore} onJoinGame={handleJoinGame} />;
   }
