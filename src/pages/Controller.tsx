@@ -1,38 +1,43 @@
 // src/pages/Controller.tsx
 import React from 'react';
-import { RPC } from 'playroomkit'; // Make sure Playroom Kit is installed & imported
+import { RPC } from 'playroomkit';
 
 const Controller: React.FC = () => {
-  // A simple handler that sends a command via RPC.
-  const handleControl = async (command: string) => {
+  // A helper function to send a control command via RPC.
+  const sendCommand = async (command: string) => {
     try {
-      // For example, you might want to use RPC.Mode.OTHERS or RPC.Mode.ALL depending on your game logic.
+      // Send command to all connected devices (or adjust the mode as needed)
       await RPC.call("handleInput", command, RPC.Mode.ALL);
     } catch (error) {
-      console.error("RPC error:", error);
+      console.error("Error sending RPC command:", error);
     }
   };
 
   return (
     <div style={{ textAlign: 'center', padding: '2rem' }}>
-      <h1>Game Controller</h1>
+      <h1>Mobile Controller</h1>
       <p>Use the buttons below to control the game.</p>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <button onTouchStart={() => handleControl("up")} onTouchEnd={() => handleControl("stopUp")}>
-          Up
+      <div style={{ margin: '1rem 0' }}>
+        <button
+          style={{ margin: '0.5rem', padding: '1rem 2rem' }}
+          onTouchStart={() => sendCommand("left")}
+          onTouchEnd={() => sendCommand("stopLeft")}
+          onMouseDown={() => sendCommand("left")}
+          onMouseUp={() => sendCommand("stopLeft")}
+        >
+          Left
         </button>
-        <div>
-          <button onTouchStart={() => handleControl("left")} onTouchEnd={() => handleControl("stopLeft")}>
-            Left
-          </button>
-          <button onTouchStart={() => handleControl("right")} onTouchEnd={() => handleControl("stopRight")}>
-            Right
-          </button>
-        </div>
-        <button onTouchStart={() => handleControl("down")} onTouchEnd={() => handleControl("stopDown")}>
-          Down
+        <button
+          style={{ margin: '0.5rem', padding: '1rem 2rem' }}
+          onTouchStart={() => sendCommand("right")}
+          onTouchEnd={() => sendCommand("stopRight")}
+          onMouseDown={() => sendCommand("right")}
+          onMouseUp={() => sendCommand("stopRight")}
+        >
+          Right
         </button>
       </div>
+      {/* You can add additional buttons for "up" or "down" if needed */}
     </div>
   );
 };

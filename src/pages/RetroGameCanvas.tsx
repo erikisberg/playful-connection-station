@@ -4,7 +4,7 @@ import { RPC } from 'playroomkit';
 
 interface GameState {
   playerX: number;
-  obstacles: { x: number, y: number, width: number, height: number }[];
+  obstacles: { x: number; y: number; width: number; height: number }[];
   score: number;
   gameOver: boolean;
 }
@@ -31,8 +31,8 @@ const RetroGameCanvas: React.FC<RetroGameCanvasProps> = ({ onGameOver }) => {
     gameOver: false,
   });
   const [keysPressed, setKeysPressed] = useState<{ [key: string]: boolean }>({});
-  
-  // New state for mobile (RPC) controls
+
+  // State for mobile (RPC) controls
   const [remoteInput, setRemoteInput] = useState<{ left: boolean; right: boolean }>({ left: false, right: false });
 
   // Handle keyboard input
@@ -53,9 +53,11 @@ const RetroGameCanvas: React.FC<RetroGameCanvasProps> = ({ onGameOver }) => {
     };
   }, [handleKeyDown, handleKeyUp]);
 
-  // Register RPC handler for mobile controls
+  // Register RPC handler for mobile controls via Playroom Kit
   useEffect(() => {
-    RPC.register("handleInput", async (input: string) => {
+    // Register the handler to listen for mobile control commands
+    const unregister = RPC.register("handleInput", async (input: string) => {
+      console.log("Received RPC input:", input);
       if (input === "left") {
         setRemoteInput(prev => ({ ...prev, left: true }));
       } else if (input === "right") {
@@ -67,6 +69,13 @@ const RetroGameCanvas: React.FC<RetroGameCanvasProps> = ({ onGameOver }) => {
       }
       return Promise.resolve("Input received");
     });
+
+    // Optional cleanup if the RPC registration returns an unregister function:
+    return () => {
+      if (unregister && typeof unregister === "function") {
+        unregister();
+      }
+    };
   }, []);
 
   // Game loop update
@@ -81,7 +90,8 @@ const RetroGameCanvas: React.FC<RetroGameCanvasProps> = ({ onGameOver }) => {
       setGameState(prevState => {
         if (prevState.gameOver) return prevState;
         let newPlayerX = prevState.playerX;
-        // Combine keyboard and remote inputs:
+        
+        // Combine keyboard and remote (RPC) inputs:
         if (keysPressed['ArrowLeft'] || keysPressed['a'] || remoteInput.left) {
           newPlayerX = Math.max(0, newPlayerX - PLAYER_SPEED);
         }
@@ -91,7 +101,6 @@ const RetroGameCanvas: React.FC<RetroGameCanvasProps> = ({ onGameOver }) => {
 
         // Update obstacles (move them downward)
         let newObstacles = prevState.obstacles.map(ob => ({ ...ob, y: ob.y + OBSTACLE_SPEED }));
-        // Remove obstacles that have gone off-screen
         newObstacles = newObstacles.filter(ob => ob.y < CANVAS_HEIGHT);
 
         // Occasionally add a new obstacle
