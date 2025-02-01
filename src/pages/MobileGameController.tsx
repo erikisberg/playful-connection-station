@@ -28,6 +28,17 @@ const MobileGameController: React.FC = () => {
   const handleUsernameSubmit = async () => {
     if (username.trim() === '') return;
     console.log("Submitting username:", username);
+    
+    // Request storage access as part of the user gesture (the click on the submit button)
+    try {
+      await document.requestStorageAccess({ localStorage: true });
+      console.log("localStorage access granted");
+    } catch (error) {
+      console.error("localStorage access denied:", error);
+      // Optionally, you could inform the user that storage access is required.
+      return;
+    }
+    
     try {
       await RPC.call("setUsername", username, RPC.Mode.ALL);
       console.log("Username submitted, switching phase");
