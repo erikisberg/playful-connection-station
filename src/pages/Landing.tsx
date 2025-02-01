@@ -32,15 +32,15 @@ const Landing: React.FC = () => {
     fetchHighscores();
   }, []);
 
-  // Construct the game URL (adjust if needed)
-  const gameUrl = window.location.origin + '/game';
+  // Change the game URL to point to the mobile controller page
+  const controllerUrl = window.location.origin + '/controller';
 
   return (
     <div style={{ textAlign: 'center', padding: '2rem' }}>
       <h1>Welcome to Playful Connection Station</h1>
       <div style={{ margin: '1rem 0' }}>
-        <QRCodeCanvas value={gameUrl} size={128} />
-        <p>Scan to join the game!</p>
+        <QRCodeCanvas value={controllerUrl} size={128} />
+        <p>Scan to join the game on your phone!</p>
       </div>
       <h2>Highscores</h2>
       <table style={{ margin: '0 auto', borderCollapse: 'collapse' }}>
@@ -65,7 +65,7 @@ const Landing: React.FC = () => {
         onClick={() => navigate('/game')}
         style={{ marginTop: '2rem', padding: '1rem 2rem', fontSize: '1rem' }}
       >
-        Start Game
+        Start Desktop Game
       </button>
     </div>
   );
