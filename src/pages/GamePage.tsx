@@ -13,36 +13,41 @@ const GamePage: React.FC = () => {
 
   // Initialize Playroom Kit for the public display (desktop)
   useEffect(() => {
-    const initGame = async () => {
+    const initDesktop = async () => {
       try {
         await insertCoin({
-          streamMode: true,  // Desktop acts as the public display
+          streamMode: true, // desktop acts as host
           skipLobby: true,
           maxPlayersPerRoom: 1,
         });
+        console.log("Desktop registered as host.");
       } catch (error) {
-        console.error("Error initializing Playroom Kit:", error);
+        console.error("Error initializing desktop:", error);
       }
     };
-    initGame();
+    initDesktop();
 
-    // Register RPC handlers from the mobile controller.
-    RPC.register("setUsername", async (username: string) => {
-      console.log("Username set:", username);
-      // Optionally update public display UI with the username.
+    // Register RPC handlers to receive messages from mobile.
+    const unregisterSetUsername = RPC.register("setUsername", async (username: string) => {
+      console.log("Desktop received username:", username);
+      // Optionally update UI with the username.
       return Promise.resolve();
     });
-    RPC.register("startGame", async () => {
-      console.log("Start game command received.");
-      // Set the state so that the game starts.
+    const unregisterStartGame = RPC.register("startGame", async () => {
+      console.log("Desktop received startGame command.");
       setGameStarted(true);
       return Promise.resolve();
     });
-    RPC.register("submitEmail", async (email: string) => {
-      console.log("Email received:", email);
-      // Process the email (e.g., store in Supabase or update highscore).
+    const unregisterSubmitEmail = RPC.register("submitEmail", async (email: string) => {
+      console.log("Desktop received email:", email);
+      // Here, you might update your highscore or store the email.
       return Promise.resolve();
     });
+    return () => {
+      if (unregisterSetUsername) unregisterSetUsername();
+      if (unregisterStartGame) unregisterStartGame();
+      if (unregisterSubmitEmail) unregisterSubmitEmail();
+    };
   }, []);
 
   const handleGameOver = (score: number) => {
@@ -58,14 +63,12 @@ const GamePage: React.FC = () => {
 
   return (
     <div>
-      {/* Show waiting screen until the mobile controller starts the game */}
       {!gameStarted ? (
         <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <h2>Waiting for game to start...</h2>
-          <p>Please start the game from your mobile controller.</p>
+          <h2>Waiting for mobile to start the game...</h2>
+          <p>Please use your mobile controller to begin.</p>
         </div>
       ) : (
-        // Once the game is started, either show the game canvas or the game over screen.
         finalScore === null ? (
           <RetroGameCanvas onGameOver={handleGameOver} />
         ) : (
@@ -80,7 +83,10 @@ const GamePage: React.FC = () => {
             ) : (
               <p>Score submitted! Thank you!</p>
             )}
-            <button onClick={handleRestart} style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>
+            <button
+              onClick={handleRestart}
+              style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}
+            >
               Back to Home
             </button>
           </div>

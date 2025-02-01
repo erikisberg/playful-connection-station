@@ -7,41 +7,37 @@ const MobileGameController: React.FC = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
 
-  // Register the mobile device as a player.
+  // Register this mobile device as a player.
   useEffect(() => {
-    const initMobilePlayer = async () => {
+    const initMobile = async () => {
       try {
-        // Call insertCoin to register this mobile device as a player.
         await insertCoin({
-          streamMode: false, // Mobile controller: not a stream screen.
-          skipLobby: true,   // Skip the default lobby UI.
-          maxPlayersPerRoom: 1, // Adjust if you only expect one mobile controller.
+          streamMode: false,  // mobile is not a stream screen
+          skipLobby: true,
+          maxPlayersPerRoom: 1,
         });
-        console.log("Mobile device registered as player.");
+        console.log("Mobile registered as player.");
       } catch (error) {
         console.error("Error initializing mobile player:", error);
       }
     };
-    initMobilePlayer();
+    initMobile();
   }, []);
 
   const handleUsernameSubmit = async () => {
     if (username.trim() === '') return;
-    console.log("Submitting username:", username);
-    
-    // Request storage access as part of the user gesture (the click on the submit button)
+    // Request storage access as part of user gesture.
     try {
       await document.requestStorageAccess({ localStorage: true });
       console.log("localStorage access granted");
     } catch (error) {
       console.error("localStorage access denied:", error);
-      // Optionally, you could inform the user that storage access is required.
       return;
     }
-    
+
     try {
+      console.log("Submitting username:", username);
       await RPC.call("setUsername", username, RPC.Mode.ALL);
-      console.log("Username submitted, switching phase");
       setPhase('controller');
     } catch (error) {
       console.error("Error setting username:", error);
@@ -51,7 +47,8 @@ const MobileGameController: React.FC = () => {
   const handleStartGame = async () => {
     try {
       await RPC.call("startGame", null, RPC.Mode.ALL);
-      setPhase('controller');
+      // Stay in controller phase
+      console.log("Start game RPC sent.");
     } catch (error) {
       console.error("Error starting game:", error);
     }
@@ -61,7 +58,7 @@ const MobileGameController: React.FC = () => {
     try {
       await RPC.call("handleInput", command, RPC.Mode.ALL);
     } catch (error) {
-      console.error("Error sending RPC command:", error);
+      console.error("Error sending command:", error);
     }
   };
 
@@ -104,7 +101,10 @@ const MobileGameController: React.FC = () => {
     return (
       <div style={{ textAlign: 'center', padding: '2rem' }}>
         <h1>Game Controller</h1>
-        <button onClick={handleStartGame} style={{ marginBottom: '1rem', padding: '0.5rem 1rem' }}>
+        <button
+          onClick={handleStartGame}
+          style={{ marginBottom: '1rem', padding: '0.5rem 1rem' }}
+        >
           Start Game
         </button>
         <p>Use the buttons below to control the game:</p>
@@ -128,7 +128,11 @@ const MobileGameController: React.FC = () => {
             Right
           </button>
         </div>
-        <button onClick={() => setPhase('gameOver')} style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>
+        {/* Optional: A button to simulate game over */}
+        <button
+          onClick={() => setPhase('gameOver')}
+          style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}
+        >
           End Game
         </button>
       </div>
@@ -148,7 +152,10 @@ const MobileGameController: React.FC = () => {
           style={{ padding: '0.5rem', fontSize: '1rem' }}
         />
         <br />
-        <button onClick={handleEmailSubmit} style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>
+        <button
+          onClick={handleEmailSubmit}
+          style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}
+        >
           Submit Email
         </button>
       </div>
