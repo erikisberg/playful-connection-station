@@ -18,8 +18,8 @@ const EmailSubmission: React.FC<EmailSubmissionProps> = ({ score, onSubmitted })
     setError(null);
 
     const { error } = await supabase
-      .from('highscores')
-      .insert([{ email, score }]);
+        .from('highscores')
+        .insert([{ username, email, score }]);
     
     if (error) {
       setError('Error submitting score. Please try again.');

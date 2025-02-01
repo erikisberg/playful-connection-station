@@ -1,17 +1,34 @@
 // src/pages/MobileGameController.tsx
-import React, { useState } from 'react';
-import { RPC } from 'playroomkit';
+import React, { useState, useEffect } from 'react';
+import { RPC, insertCoin } from 'playroomkit';
 
 const MobileGameController: React.FC = () => {
   const [phase, setPhase] = useState<'enterUsername' | 'controller' | 'gameOver'>('enterUsername');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
 
-  // When the username is submitted, send it to the desktop display via RPC.
+  // Register the mobile device as a player.
+  useEffect(() => {
+    const initMobilePlayer = async () => {
+      try {
+        // Call insertCoin to register this mobile device as a player.
+        await insertCoin({
+          streamMode: false, // Mobile controller: not a stream screen.
+          skipLobby: true,   // Skip the default lobby UI.
+          maxPlayersPerRoom: 1, // Adjust if you only expect one mobile controller.
+        });
+        console.log("Mobile device registered as player.");
+      } catch (error) {
+        console.error("Error initializing mobile player:", error);
+      }
+    };
+    initMobilePlayer();
+  }, []);
+
   const handleUsernameSubmit = async () => {
     if (username.trim() === '') return;
+    console.log("Submitting username:", username);
     try {
-      console.log("Submitting username:", username); // Debug log
       await RPC.call("setUsername", username, RPC.Mode.ALL);
       console.log("Username submitted, switching phase");
       setPhase('controller');
@@ -20,19 +37,15 @@ const MobileGameController: React.FC = () => {
     }
   };
 
-  // When the start button is pressed, tell the desktop to start the game.
   const handleStartGame = async () => {
     try {
       await RPC.call("startGame", null, RPC.Mode.ALL);
-      // Remain in the controller phase so that you can control the game.
-      // (Alternatively, you might automatically switch to controller UI if not already there.)
       setPhase('controller');
     } catch (error) {
       console.error("Error starting game:", error);
     }
   };
 
-  // Function to send control commands.
   const sendCommand = async (command: string) => {
     try {
       await RPC.call("handleInput", command, RPC.Mode.ALL);
@@ -41,13 +54,11 @@ const MobileGameController: React.FC = () => {
     }
   };
 
-  // When game is over, submit the email.
   const handleEmailSubmit = async () => {
     if (email.trim() === '') return;
     try {
       await RPC.call("submitEmail", email, RPC.Mode.ALL);
       alert("Email submitted. Thank you!");
-      // Optionally reset the controller for the next player.
       setPhase('enterUsername');
       setUsername('');
       setEmail('');
@@ -56,7 +67,6 @@ const MobileGameController: React.FC = () => {
     }
   };
 
-  // Render different screens based on the phase.
   if (phase === 'enterUsername') {
     return (
       <div style={{ textAlign: 'center', padding: '2rem' }}>
@@ -69,7 +79,10 @@ const MobileGameController: React.FC = () => {
           style={{ padding: '0.5rem', fontSize: '1rem' }}
         />
         <br />
-        <button onClick={handleUsernameSubmit} style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>
+        <button
+          onClick={handleUsernameSubmit}
+          style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}
+        >
           Submit Username
         </button>
       </div>
@@ -104,7 +117,6 @@ const MobileGameController: React.FC = () => {
             Right
           </button>
         </div>
-        {/* For demonstration, you might include a button to simulate game over */}
         <button onClick={() => setPhase('gameOver')} style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>
           End Game
         </button>
