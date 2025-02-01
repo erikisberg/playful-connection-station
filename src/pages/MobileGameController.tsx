@@ -11,8 +11,9 @@ const MobileGameController: React.FC = () => {
   const handleUsernameSubmit = async () => {
     if (username.trim() === '') return;
     try {
+      console.log("Submitting username:", username); // Debug log
       await RPC.call("setUsername", username, RPC.Mode.ALL);
-      // Once username is set, move to controller phase.
+      console.log("Username submitted, switching phase");
       setPhase('controller');
     } catch (error) {
       console.error("Error setting username:", error);
