@@ -1,7 +1,7 @@
 // src/pages/Landing.tsx
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
-import QRCode from 'qrcode.react';
+import { QRCode } from 'qrcode.react';
 import { useNavigate } from 'react-router-dom';
 
 interface Highscore {
