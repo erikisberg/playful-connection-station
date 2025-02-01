@@ -16,8 +16,8 @@ const GamePage: React.FC = () => {
     const initGame = async () => {
       try {
         await insertCoin({
-          streamMode: true,  // false because we're not showing a stream screen on mobile
-          skipLobby: false,
+          streamMode: false,  // false because we're not showing a stream screen on mobile
+          skipLobby: true,
           maxPlayersPerRoom: 1, // Adjust as needed
         });
       } catch (error) {
