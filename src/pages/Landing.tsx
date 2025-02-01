@@ -1,7 +1,7 @@
 // src/pages/Landing.tsx
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { QRCode } from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { useNavigate } from 'react-router-dom';
 
 interface Highscore {
@@ -39,7 +39,7 @@ const Landing: React.FC = () => {
     <div style={{ textAlign: 'center', padding: '2rem' }}>
       <h1>Welcome to Playful Connection Station</h1>
       <div style={{ margin: '1rem 0' }}>
-        <QRCode value={gameUrl} size={128} />
+        <QRCodeCanvas value={gameUrl} size={128} />
         <p>Scan to join the game!</p>
       </div>
       <h2>Highscores</h2>
