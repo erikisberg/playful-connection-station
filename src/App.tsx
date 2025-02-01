@@ -1,20 +1,17 @@
 // src/App.tsx
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Landing from './pages/Landing';
-import GamePage from './pages/GamePage'; // This wraps RetroGameCanvas and EmailSubmission
-import { useIsMobile } from './hooks/useIsMobile';
+import Landing from './pages/Landing';         // Public display: QR code + highscore
+import GamePage from './pages/GamePage';           // Desktop game display
+import MobileGameController from './pages/MobileGameController'; // Mobile controller flow
 
 const App: React.FC = () => {
-  const isMobile = useIsMobile();
-
   return (
     <BrowserRouter>
       <Routes>
-        {/* On mobile, directly show the game page; on desktop, show the landing page */}
-        <Route path="/" element={ isMobile ? <GamePage /> : <Landing /> } />
-        {/* Also allow navigation to /game on any device */}
+        <Route path="/" element={<Landing />} />
         <Route path="/game" element={<GamePage />} />
+        <Route path="/controller" element={<MobileGameController />} />
       </Routes>
     </BrowserRouter>
   );
